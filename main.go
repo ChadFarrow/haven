@@ -51,6 +51,9 @@ func main() {
 		go backupDatabase()
 	}()
 
+	// Start monitor server
+	startMonitor()
+
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("templates/static"))))
 	http.HandleFunc("/", dynamicRelayHandler)
 
