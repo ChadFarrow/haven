@@ -10,13 +10,19 @@
     </array>
     <key>WorkingDirectory</key>
     <string>/Users/chad-mini/haven</string>
-    <key>KeepAlive</key>
-    <true/>
     <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
     <true/>
     <key>StandardOutPath</key>
     <string>/Users/chad-mini/haven/haven.log</string>
     <key>StandardErrorPath</key>
     <string>/Users/chad-mini/haven/haven.log</string>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+    <key>ExitTimeOut</key>
+    <integer>10</integer>
 </dict>
 </plist>
