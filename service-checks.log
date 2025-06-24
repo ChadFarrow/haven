@@ -12038,3 +12038,23 @@ Passed: 3/7 checks
 === Summary ===
 Passed: 3/7 checks
 [1;33m⚠️  Some issues detected. Check the output above.[0m
+🔍 Checking Haven and Nginx services...
+
+=== Process Checks ===
+[0;32m✅ Haven Service is running[0m
+[0;32m✅ Nginx is running[0m
+
+=== Port Checks ===
+[0;31m❌ Haven is not listening on port 3355[0m
+[0;31m❌ Nginx HTTP is not listening on port 80[0m
+[0;31m❌ Nginx HTTPS is not listening on port 443[0m
+
+=== SSL Certificate Check ===
+[0;32m✅ SSL certificate for podtards.com is valid[0m
+
+=== Nginx Configuration ===
+[0;31m❌ Nginx configuration has errors[0m
+
+=== Summary ===
+Passed: 3/7 checks
+[1;33m⚠️  Some issues detected. Check the output above.[0m
