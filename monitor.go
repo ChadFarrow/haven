@@ -65,7 +65,6 @@ func monitorHandler(w http.ResponseWriter, r *http.Request) {
                 document.getElementById('log-size').textContent = data.log_file_size;
                 document.getElementById('db-size').textContent = data.database_size;
                 document.getElementById('blossom-files').textContent = data.blossom_files;
-                document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
                 
                 // Update status indicator
                 const statusEl = document.getElementById('status-indicator');
@@ -84,6 +83,7 @@ func monitorHandler(w http.ResponseWriter, r *http.Request) {
                 const response = await fetch('/monitor/api/logs?lines=50');
                 const data = await response.json();
                 document.getElementById('logs').textContent = data.logs;
+                document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
             } catch (error) {
                 document.getElementById('logs').textContent = 'Error loading logs: ' + error.message;
             }
