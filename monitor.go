@@ -28,18 +28,17 @@ type MonitorStatus struct {
 	Timestamp     time.Time `json:"timestamp"`
 }
 
-var startTime = time.Now()
+var startTime = getHavenStartTime()
 
 func startMonitor() {
 	http.HandleFunc("/monitor", monitorHandler)
 	http.HandleFunc("/monitor/api/status", statusAPIHandler)
 	http.HandleFunc("/monitor/api/logs", logsAPIHandler)
-	http.HandleFunc("/monitor/api/upload", uploadHandler)
 	http.HandleFunc("/monitor/static/", monitorStaticHandler)
 	
-	log.Println("🔍 Monitor server starting on :8082")
+	log.Println("🔍 Monitor server starting on :8080")
 	go func() {
-		if err := http.ListenAndServe(":8082", nil); err != nil {
+		if err := http.ListenAndServe(":8080", nil); err != nil {
 			log.Printf("Monitor server error: %v", err)
 		}
 	}()
@@ -106,87 +105,10 @@ func monitorHandler(w http.ResponseWriter, r *http.Request) {
         setInterval(updateStatus, 5000);
         setInterval(loadLogs, 10000);
         
-        // File upload functionality
-        function setupFileUpload() {
-            const fileInput = document.getElementById('fileInput');
-            const dropzone = document.getElementById('dropzone');
-            const uploadStatus = document.getElementById('uploadStatus');
-            const fileList = document.getElementById('fileList');
-
-            // Click to select files
-            dropzone.addEventListener('click', () => fileInput.click());
-
-            // Drag and drop
-            dropzone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropzone.classList.add('border-purple-500', 'bg-gray-700');
-            });
-
-            dropzone.addEventListener('dragleave', () => {
-                dropzone.classList.remove('border-purple-500', 'bg-gray-700');
-            });
-
-            dropzone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropzone.classList.remove('border-purple-500', 'bg-gray-700');
-                const files = e.dataTransfer.files;
-                handleFiles(files);
-            });
-
-            fileInput.addEventListener('change', (e) => {
-                handleFiles(e.target.files);
-            });
-
-            function handleFiles(files) {
-                if (files.length === 0) return;
-
-                const formData = new FormData();
-                Array.from(files).forEach(file => {
-                    formData.append('files', file);
-                });
-
-                uploadStatus.className = 'mt-4 text-sm text-blue-400';
-                uploadStatus.textContent = 'Uploading files...';
-                uploadStatus.classList.remove('hidden');
-
-                fetch('/monitor/api/upload', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        uploadStatus.className = 'mt-4 text-sm text-green-400';
-                        uploadStatus.textContent = 'Successfully uploaded ' + data.files.length + ' file(s)';
-                        
-                        fileList.innerHTML = '';
-                        data.files.forEach(file => {
-                            const fileItem = document.createElement('div');
-                            fileItem.className = file.success ? 
-                                'text-sm text-green-400 bg-gray-700 p-2 rounded' : 
-                                'text-sm text-red-400 bg-gray-700 p-2 rounded';
-                            fileItem.textContent = file.success ? 
-                                '✓ ' + file.filename : 
-                                '✗ ' + file.filename + ': ' + file.error;
-                            fileList.appendChild(fileItem);
-                        });
-                    } else {
-                        uploadStatus.className = 'mt-4 text-sm text-red-400';
-                        uploadStatus.textContent = 'Upload failed';
-                    }
-                })
-                .catch(error => {
-                    uploadStatus.className = 'mt-4 text-sm text-red-400';
-                    uploadStatus.textContent = 'Upload error: ' + error.message;
-                });
-            }
-        }
-
         // Load initial data
         window.onload = function() {
             updateStatus();
             loadLogs();
-            setupFileUpload();
         };
     </script>
 </head>
@@ -236,30 +158,12 @@ func monitorHandler(w http.ResponseWriter, r *http.Request) {
             </div>
         </div>
         
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div class="bg-gray-800 rounded-lg p-6">
-                <h3 class="text-lg font-semibold mb-4 text-gray-300">File Upload</h3>
-                <div class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
-                    <input type="file" id="fileInput" class="hidden" multiple accept="*/*">
-                    <div id="dropzone" class="cursor-pointer">
-                        <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                        </svg>
-                        <p class="text-gray-400">Click to select files or drag and drop</p>
-                        <p class="text-sm text-gray-500 mt-1">Multiple files supported</p>
-                    </div>
-                </div>
-                <div id="uploadStatus" class="mt-4 text-sm hidden"></div>
-                <div id="fileList" class="mt-4 space-y-2"></div>
+        <div class="bg-gray-800 rounded-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-300">Recent Logs</h3>
+                <p class="text-sm text-gray-500">Last updated: <span id="last-updated">never</span></p>
             </div>
-            
-            <div class="bg-gray-800 rounded-lg p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-300">Recent Logs</h3>
-                    <p class="text-sm text-gray-500">Last updated: <span id="last-updated">never</span></p>
-                </div>
-                <pre id="logs" class="bg-gray-900 p-4 rounded text-sm text-green-400 font-mono overflow-x-auto max-h-96 overflow-y-auto">Loading logs...</pre>
-            </div>
+            <pre id="logs" class="bg-gray-900 p-4 rounded text-sm text-green-400 font-mono overflow-x-auto max-h-96 overflow-y-auto">Loading logs...</pre>
         </div>
     </div>
 </body>
@@ -326,79 +230,6 @@ func logsAPIHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Parse multipart form with 32MB max memory
-	err := r.ParseMultipartForm(32 << 20)
-	if err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
-		return
-	}
-
-	files := r.MultipartForm.File["files"]
-	uploadDir := "./uploads"
-	
-	// Ensure upload directory exists
-	if err := os.MkdirAll(uploadDir, 0755); err != nil {
-		http.Error(w, "Failed to create upload directory", http.StatusInternalServerError)
-		return
-	}
-
-	var results []map[string]interface{}
-	
-	for _, fileHeader := range files {
-		file, err := fileHeader.Open()
-		if err != nil {
-			results = append(results, map[string]interface{}{
-				"filename": fileHeader.Filename,
-				"success":  false,
-				"error":    "Failed to open file",
-			})
-			continue
-		}
-		defer file.Close()
-
-		// Create destination file
-		destPath := filepath.Join(uploadDir, fileHeader.Filename)
-		destFile, err := os.Create(destPath)
-		if err != nil {
-			results = append(results, map[string]interface{}{
-				"filename": fileHeader.Filename,
-				"success":  false,
-				"error":    "Failed to create destination file",
-			})
-			continue
-		}
-		defer destFile.Close()
-
-		// Copy file contents
-		_, err = io.Copy(destFile, file)
-		if err != nil {
-			results = append(results, map[string]interface{}{
-				"filename": fileHeader.Filename,
-				"success":  false,
-				"error":    "Failed to copy file",
-			})
-			continue
-		}
-
-		results = append(results, map[string]interface{}{
-			"filename": fileHeader.Filename,
-			"success":  true,
-			"path":     destPath,
-		})
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"success": true,
-		"files":   results,
-	})
-}
 
 func monitorStaticHandler(w http.ResponseWriter, r *http.Request) {
 	// Simple static file serving for any additional assets
@@ -528,4 +359,20 @@ func formatDuration(d time.Duration) string {
 		return fmt.Sprintf("%.1fh", d.Hours())
 	}
 	return fmt.Sprintf("%.1fd", d.Hours()/24)
+}
+
+func getHavenStartTime() time.Time {
+	const startTimeFile = ".haven_start_time"
+	
+	// Try to read existing start time
+	if data, err := os.ReadFile(startTimeFile); err == nil {
+		if startTime, err := time.Parse(time.RFC3339, strings.TrimSpace(string(data))); err == nil {
+			return startTime
+		}
+	}
+	
+	// If file doesn't exist or is corrupted, create new start time
+	now := time.Now()
+	os.WriteFile(startTimeFile, []byte(now.Format(time.RFC3339)), 0644)
+	return now
 }
