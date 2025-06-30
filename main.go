@@ -47,7 +47,7 @@ func main() {
 			return
 		}
 
-		go subscribeInboxAndChat()
+		// go subscribeInboxAndChat() // Disabled due to WebSocket connection hangs
 		go backupDatabase()
 	}()
 
