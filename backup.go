@@ -20,28 +20,35 @@ func backupDatabase() {
 		return
 	}
 
+	// Trigger backup immediately on startup
+	performBackup()
+
 	ticker := time.NewTicker(time.Duration(config.BackupIntervalHours) * time.Hour)
 	defer ticker.Stop()
 
-	zipFileName := "db.zip"
 	for {
 		select {
 		case <-ticker.C:
-			if err := ZipDirectory("db", zipFileName); err != nil {
-				log.Println("🚫 error zipping database folder:", err)
-				continue
-			}
-			switch config.BackupProvider {
-			case "s3":
-				S3Upload(zipFileName)
-			case "aws":
-				AwsUpload(zipFileName)
-			case "gcp":
-				GCPBucketUpload(zipFileName)
-			default:
-				log.Println("🚫 we only support AWS, GCP, and S3 at this time")
-			}
+			performBackup()
 		}
+	}
+}
+
+func performBackup() {
+	zipFileName := "db.zip"
+	if err := ZipDirectory("db", zipFileName); err != nil {
+		log.Println("🚫 error zipping database folder:", err)
+		return
+	}
+	switch config.BackupProvider {
+	case "s3":
+		S3Upload(zipFileName)
+	case "aws":
+		AwsUpload(zipFileName)
+	case "gcp":
+		GCPBucketUpload(zipFileName)
+	default:
+		log.Println("🚫 we only support AWS, GCP, and S3 at this time")
 	}
 }
 
@@ -50,7 +57,8 @@ func backupDatabase() {
 //goland:noinspection GoUnhandledErrorResult
 func GCPBucketUpload(zipFileName string) {
 	if config.GcpConfig == nil {
-		log.Fatal("🚫 GCP specified as backup provider but no GCP config found. Check environment variables.")
+		log.Println("🚫 GCP specified as backup provider but no GCP config found. Check environment variables.")
+		return
 	}
 
 	bucket := config.GcpConfig.Bucket
@@ -59,14 +67,16 @@ func GCPBucketUpload(zipFileName string) {
 
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("🚫 GCP client creation failed:", err)
+		return
 	}
 	defer client.Close()
 
 	// open the zip db file.
 	f, err := os.Open(zipFileName)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("🚫 GCP file open failed:", err)
+		return
 	}
 	defer f.Close()
 
@@ -75,11 +85,13 @@ func GCPBucketUpload(zipFileName string) {
 	// Upload an object with storage.Writer.
 	wc := obj.NewWriter(ctx)
 	if _, err = io.Copy(wc, f); err != nil {
-		log.Fatal(err)
+		log.Println("🚫 GCP upload failed:", err)
+		return
 	}
 
 	if err := wc.Close(); err != nil {
-		log.Fatal(err)
+		log.Println("🚫 GCP writer close failed:", err)
+		return
 	}
 
 	log.Printf("✅ Successfully uploaded %q to %q\n", zipFileName, bucket)
@@ -87,7 +99,7 @@ func GCPBucketUpload(zipFileName string) {
 	// delete the file.
 	err = os.Remove(zipFileName)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("🚫 error removing zip file:", err)
 	}
 }
 
@@ -96,10 +108,11 @@ func GCPBucketUpload(zipFileName string) {
 //goland:noinspection GoUnhandledErrorResult
 func AwsUpload(zipFileName string) {
 	if config.AwsConfig == nil {
-		log.Fatal("🚫 AWS specified as backup provider but no AWS config found. Check environment variables.")
+		log.Println("🚫 AWS specified as backup provider but no AWS config found. Check environment variables.")
+		return
 	}
 
-	s3UploadShared(
+	if err := s3UploadShared(
 		zipFileName,
 		config.AwsConfig.AccessKeyID,
 		config.AwsConfig.SecretAccessKey,
@@ -107,15 +120,19 @@ func AwsUpload(zipFileName string) {
 		config.AwsConfig.Region,
 		config.AwsConfig.Bucket,
 		true,
-	)
+	); err != nil {
+		log.Println("🚫 AWS upload failed:", err)
+		return
+	}
 }
 
 func S3Upload(zipFileName string) {
 	if config.S3Config == nil {
-		log.Fatal("🚫 S3 specified as backup provider but no S3 config found. Check environment variables.")
+		log.Println("🚫 S3 specified as backup provider but no S3 config found. Check environment variables.")
+		return
 	}
 
-	s3UploadShared(
+	if err := s3UploadShared(
 		zipFileName,
 		config.S3Config.AccessKeyID,
 		config.S3Config.SecretKey,
@@ -123,7 +140,10 @@ func S3Upload(zipFileName string) {
 		config.S3Config.Region,
 		config.S3Config.BucketName,
 		true,
-	)
+	); err != nil {
+		log.Println("🚫 S3 upload failed:", err)
+		return
+	}
 }
 
 func s3UploadShared(
@@ -134,7 +154,7 @@ func s3UploadShared(
 	region string,
 	bucketName string,
 	secure bool,
-) {
+) error {
 	log.Println("🚀 uploading to S3 Bucket...")
 
 	// Create MinIO client
@@ -144,13 +164,13 @@ func s3UploadShared(
 		Secure: secure,
 	})
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// Upload the file to the S3 bucket
 	file, err := os.Open(zipFileName)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer func(file *os.File) {
 		if err := file.Close(); err != nil {
@@ -160,7 +180,7 @@ func s3UploadShared(
 
 	fileInfo, err := file.Stat()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	_, err = client.PutObject(
@@ -174,7 +194,7 @@ func s3UploadShared(
 		},
 	)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	log.Printf("✅ Successfully uploaded %q to %q\n", zipFileName, bucketName)
@@ -182,8 +202,10 @@ func s3UploadShared(
 	// delete the file
 	err = os.Remove(zipFileName)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("🚫 error removing zip file:", err)
 	}
+
+	return nil
 }
 
 //goland:noinspection GoUnhandledErrorResult
