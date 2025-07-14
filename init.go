@@ -331,6 +331,20 @@ func initRelays() {
 	})
 
 	mux = outboxRelay.Router()
+	
+	// Add CORS middleware to all routes
+	originalHandler := mux
+	mux = http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		originalHandler.ServeHTTP(w, r)
+	})
 
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -356,7 +370,7 @@ func initRelays() {
 	bl.Store = blossom.EventStoreBlobIndexWrapper{Store: outboxDB, ServiceURL: bl.ServiceURL}
 	bl.StoreBlob = append(bl.StoreBlob, func(ctx context.Context, sha256 string, body []byte) error {
 
-		file, err := fs.Create(config.BlossomPath + sha256)
+		file, err := fs.Create(config.BlossomPath + "/" + sha256)
 		if err != nil {
 			return err
 		}
@@ -366,10 +380,10 @@ func initRelays() {
 		return nil
 	})
 	bl.LoadBlob = append(bl.LoadBlob, func(ctx context.Context, sha256 string) (io.ReadSeeker, error) {
-		return fs.Open(config.BlossomPath + sha256)
+		return fs.Open(config.BlossomPath + "/" + sha256)
 	})
 	bl.DeleteBlob = append(bl.DeleteBlob, func(ctx context.Context, sha256 string) error {
-		return fs.Remove(config.BlossomPath + sha256)
+		return fs.Remove(config.BlossomPath + "/" + sha256)
 	})
 	bl.RejectUpload = append(bl.RejectUpload, func(ctx context.Context, event *nostr.Event, size int, ext string) (bool, string, int) {
 		if event.PubKey == nPubToPubkey(config.OwnerNpub) {
