@@ -86,7 +86,7 @@ func loadConfig() Config {
 		RelayPort:                            getEnvInt("RELAY_PORT", 3355),
 		RelayBindAddress:                     getEnvString("RELAY_BIND_ADDRESS", "0.0.0.0"),
 		RelaySoftware:                        "https://github.com/bitvora/haven",
-		RelayVersion:                         "v1.0.5",
+		RelayVersion:                         "v1.0.6",
 		PrivateRelayName:                     getEnv("PRIVATE_RELAY_NAME"),
 		PrivateRelayNpub:                     getEnv("PRIVATE_RELAY_NPUB"),
 		PrivateRelayDescription:              getEnv("PRIVATE_RELAY_DESCRIPTION"),

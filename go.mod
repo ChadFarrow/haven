@@ -5,7 +5,7 @@ go 1.24.1
 require (
 	cloud.google.com/go/storage v1.52.0
 	github.com/fiatjaf/eventstore v0.17.1
-	github.com/fiatjaf/khatru v0.18.1
+	github.com/fiatjaf/khatru v0.18.2
 	github.com/joho/godotenv v1.5.1
 	github.com/minio/minio-go/v7 v7.0.90
 	github.com/nbd-wtf/go-nostr v0.51.12
