@@ -308,3 +308,130 @@ HIGH AVAILABILITY VAULT FOR EVENTS ON NOSTR
 2025/07/25 11:36:25 📦 database zipped up!
 2025/07/25 11:36:25 🚀 uploading to S3 Bucket...
 2025/07/25 11:36:29 ✅ Successfully uploaded "db.zip" to "haven-backup"
+[32m
+██╗  ██╗ █████╗ ██╗   ██╗███████╗███╗   ██╗
+██║  ██║██╔══██╗██║   ██║██╔════╝████╗  ██║
+███████║███████║██║   ██║█████╗  ██╔██╗ ██║
+██╔══██║██╔══██║╚██╗ ██╔╝██╔══╝  ██║╚██╗██║
+██║  ██║██║  ██║ ╚████╔╝ ███████╗██║ ╚████║
+╚═╝  ╚═╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝
+HIGH AVAILABILITY VAULT FOR EVENTS ON NOSTR
+	[0m
+2025/09/19 02:20:02 🚀 haven is booting up
+2025/09/19 02:20:02 🚧 Private relay limits:
+{
+  "EventIPLimiterTokensPerInterval": 50,
+  "EventIPLimiterInterval": 1,
+  "EventIPLimiterMaxTokens": 100,
+  "AllowEmptyFilters": true,
+  "AllowComplexFilters": true,
+  "ConnectionRateLimiterTokensPerInterval": 3,
+  "ConnectionRateLimiterInterval": 5,
+  "ConnectionRateLimiterMaxTokens": 9
+}
+2025/09/19 02:20:02 🚧 Chat relay limits:
+{
+  "EventIPLimiterTokensPerInterval": 50,
+  "EventIPLimiterInterval": 1,
+  "EventIPLimiterMaxTokens": 100,
+  "AllowEmptyFilters": false,
+  "AllowComplexFilters": false,
+  "ConnectionRateLimiterTokensPerInterval": 3,
+  "ConnectionRateLimiterInterval": 3,
+  "ConnectionRateLimiterMaxTokens": 9
+}
+2025/09/19 02:20:02 🚧 Inbox relay limits:
+{
+  "EventIPLimiterTokensPerInterval": 10,
+  "EventIPLimiterInterval": 1,
+  "EventIPLimiterMaxTokens": 20,
+  "AllowEmptyFilters": false,
+  "AllowComplexFilters": false,
+  "ConnectionRateLimiterTokensPerInterval": 3,
+  "ConnectionRateLimiterInterval": 1,
+  "ConnectionRateLimiterMaxTokens": 9
+}
+2025/09/19 02:20:02 🚧 Outbox relay limits:
+{
+  "EventIPLimiterTokensPerInterval": 10,
+  "EventIPLimiterInterval": 60,
+  "EventIPLimiterMaxTokens": 100,
+  "AllowEmptyFilters": false,
+  "AllowComplexFilters": false,
+  "ConnectionRateLimiterTokensPerInterval": 3,
+  "ConnectionRateLimiterInterval": 1,
+  "ConnectionRateLimiterMaxTokens": 9
+}
+2025/09/19 02:20:02 🔍 Monitor server starting on :8080
+2025/09/19 02:20:02 🔗 listening at 0.0.0.0:3355
+[32m
+██╗  ██╗ █████╗ ██╗   ██╗███████╗███╗   ██╗
+██║  ██║██╔══██╗██║   ██║██╔════╝████╗  ██║
+███████║███████║██║   ██║█████╗  ██╔██╗ ██║
+██╔══██║██╔══██║╚██╗ ██╔╝██╔══╝  ██║╚██╗██║
+██║  ██║██║  ██║ ╚████╔╝ ███████╗██║ ╚████║
+╚═╝  ╚═╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝
+HIGH AVAILABILITY VAULT FOR EVENTS ON NOSTR
+	[0m
+2025/09/19 02:20:11 🚀 haven is booting up
+2025/09/19 02:20:11 🚧 Private relay limits:
+{
+  "EventIPLimiterTokensPerInterval": 50,
+  "EventIPLimiterInterval": 1,
+  "EventIPLimiterMaxTokens": 100,
+  "AllowEmptyFilters": true,
+  "AllowComplexFilters": true,
+  "ConnectionRateLimiterTokensPerInterval": 3,
+  "ConnectionRateLimiterInterval": 5,
+  "ConnectionRateLimiterMaxTokens": 9
+}
+2025/09/19 02:20:11 🚧 Chat relay limits:
+{
+  "EventIPLimiterTokensPerInterval": 50,
+  "EventIPLimiterInterval": 1,
+  "EventIPLimiterMaxTokens": 100,
+  "AllowEmptyFilters": false,
+  "AllowComplexFilters": false,
+  "ConnectionRateLimiterTokensPerInterval": 3,
+  "ConnectionRateLimiterInterval": 3,
+  "ConnectionRateLimiterMaxTokens": 9
+}
+2025/09/19 02:20:11 🚧 Inbox relay limits:
+{
+  "EventIPLimiterTokensPerInterval": 10,
+  "EventIPLimiterInterval": 1,
+  "EventIPLimiterMaxTokens": 20,
+  "AllowEmptyFilters": false,
+  "AllowComplexFilters": false,
+  "ConnectionRateLimiterTokensPerInterval": 3,
+  "ConnectionRateLimiterInterval": 1,
+  "ConnectionRateLimiterMaxTokens": 9
+}
+2025/09/19 02:20:11 🚧 Outbox relay limits:
+{
+  "EventIPLimiterTokensPerInterval": 10,
+  "EventIPLimiterInterval": 60,
+  "EventIPLimiterMaxTokens": 100,
+  "AllowEmptyFilters": false,
+  "AllowComplexFilters": false,
+  "ConnectionRateLimiterTokensPerInterval": 3,
+  "ConnectionRateLimiterInterval": 1,
+  "ConnectionRateLimiterMaxTokens": 9
+}
+2025/09/19 02:20:11 🔍 Monitor server starting on :8080
+2025/09/19 02:20:11 🔗 listening at 0.0.0.0:3355
+2025/09/19 02:20:12 🌐 building web of trust graph
+2025/09/19 02:20:18 🕸️ analysed 100 followed pubkeys so far
+2025/09/19 02:20:22 🕸️ analysed 198 followed pubkeys so far
+2025/09/19 02:20:30 🕸️ analysed 297 followed pubkeys so far
+2025/09/19 02:20:34 🕸️ analysed 397 followed pubkeys so far
+2025/09/19 02:20:42 🕸️ analysed 495 followed pubkeys so far
+2025/09/19 02:20:48 🕸️ analysed 594 followed pubkeys so far
+2025/09/19 02:20:50 🕸️ analysed 611 followed pubkeys so far
+2025/09/19 02:20:50 🫂 total network size: 20579
+2025/09/19 02:20:50 🔗 relays discovered: 604
+2025/09/19 02:20:53 🌐 pubkeys with minimum followers:  20579 keys
+2025/09/19 02:20:53 📦 zipping up the database
+2025/09/19 02:21:07 📦 database zipped up!
+2025/09/19 02:21:07 🚀 uploading to S3 Bucket...
+2025/09/19 02:21:16 ✅ Successfully uploaded "db.zip" to "haven-backup"
