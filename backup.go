@@ -26,7 +26,6 @@ func backupDatabase() {
 	ticker := time.NewTicker(time.Duration(config.BackupIntervalHours) * time.Hour)
 	defer ticker.Stop()
 
-	zipFileName := "db.zip"
 	for {
 		select {
 		case <-ticker.C:

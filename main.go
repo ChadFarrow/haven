@@ -65,11 +65,7 @@ func main() {
 		go backupDatabase()
 	}()
 
-	// Start monitor server
-	startMonitor()
-
 	http.Handle("/static/", corsMiddleware(http.StripPrefix("/static/", http.FileServer(http.Dir("templates/static")))))
-	http.Handle("/uploads/", corsMiddleware(http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads")))))
 	http.HandleFunc("/", dynamicRelayHandler)
 
 	addr := fmt.Sprintf("%s:%d", config.RelayBindAddress, config.RelayPort)
