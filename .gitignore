@@ -1,0 +1,17 @@
+.env
+.env.backup
+relays_import.json
+relays_blastr.json
+haven
+.DS_Store
+.idea/
+db.zip
+db/
+blossom/
+*.log
+db_backup_*/
+haven.log.old
+backup_test.log
+haven_backup_test.log
+restart_backup.log
+ssl-checks.log
