@@ -20,19 +20,6 @@ var (
 	fs     afero.Fs
 )
 
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
-
 func main() {
 	importFlag := flag.Bool("import", false, "Run the importNotes function after initializing relays")
 	flag.Parse()
@@ -42,7 +29,7 @@ func main() {
 	green := "\033[32m"
 	reset := "\033[0m"
 	fmt.Println(green + art + reset)
-	log.Println("🚀 haven is booting up")
+	log.Println("🚀 HAVEN", config.RelayVersion, "is booting up")
 	fs = afero.NewOsFs()
 	if err := fs.MkdirAll(config.BlossomPath, 0755); err != nil {
 		log.Fatal("🚫 error creating blossom path:", err)
@@ -61,11 +48,11 @@ func main() {
 			return
 		}
 
-		// go subscribeInboxAndChat() // Disabled due to WebSocket connection hangs
+		go subscribeInboxAndChat()
 		go backupDatabase()
 	}()
 
-	http.Handle("/static/", corsMiddleware(http.StripPrefix("/static/", http.FileServer(http.Dir("templates/static")))))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("templates/static"))))
 	http.HandleFunc("/", dynamicRelayHandler)
 
 	addr := fmt.Sprintf("%s:%d", config.RelayBindAddress, config.RelayPort)

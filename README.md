@@ -26,43 +26,47 @@ HAVEN (High Availability Vault for Events on Nostr) is the most sovereign person
 
 **Import Old Notes**: Import your old notes and notes you're tagged in from other relays.
 
-## Prerequisites
+## Installation
 
-- **Go**: Ensure you have Go installed on your system. You can download it from [here](https://golang.org/dl/).
+### Option 1: Download Pre-built Binaries (Recommended)
 
-    ```bash
-    sudo apt update #Update Package List
-    sudo apt install snapd #install snapd to get a newer version of Go
-    sudo snap install go --classic #Install Go
-    go version #check if go was installed correctly
-    ```
+The easiest way to get started with Haven is to download pre-built binaries from our GitHub releases page:
 
-- **Build Essentials**: If you're using Linux, you may need to install build essentials. You can do this by running `sudo apt install build-essential`.
+**[Download Haven Releases](https://github.com/bitvora/haven/releases/)**
+
+#### Installation Steps:
+
+1. **Download the appropriate binary** for your system from the releases page
+2. **Verify the download (optional)**: See our [Verification Documentation](docs/verify.md) for 
+instructions on how to verify the authenticity of the binaries using GPG signatures and checksums.
+3. **Create a haven directory** and extract the downloaded file:
+   ```bash
+   mkdir haven
+   # For Linux/macOS:
+   tar -xzf haven_[Platform]_[Architecture].tar.gz -C haven
+   # For Windows: extract the .zip file to this directory
+   ```
+### Option 2: Build from Source
+
+If you prefer to build Haven from source or need to customize the build, please see the [Build Documentation](docs/build.md).
 
 ## Setup Instructions
 
-Follow these steps to get the Haven Relay running on your local machine:
+Follow these steps to get the Haven Relay running on your local machine (after installing via binary download or building from source):
 
-### 1. Clone the repository
+### 1. Copy `.env.example` to `.env`
 
-```bash
-git clone https://github.com/bitvora/haven.git
-cd haven
-```
-
-### 2. Copy `.env.example` to `.env`
-
-You'll need to create an `.env` file based on the example provided in the repository.
+You'll need to create an `.env` file based on the example provided.
 
 ```bash
 cp .env.example .env
 ```
 
-### 3. Set your environment variables
+### 2. Set your environment variables
 
 Open the `.env` file and set the necessary environment variables.
 
-### 4. Create the relays JSON files
+### 3. Create the relays JSON files
 
 Copy the example relays JSON files for your seed and blastr relays:
 
@@ -76,18 +80,11 @@ cp relays_blastr.example.json relays_blastr.json
 
 The JSON should contain an array of relay URLs, which default to wss:// if you don't explicitly specify the protocol.
 
-### 4. Build the project
+### 4. Run on System Startup
 
-Run the following command to build the relay:
-
-```bash
-go build
-```
-
-### 5. Create a Systemd Service
-
+### Linux - Create a Systemd Service
 To have the relay run as a service, create a systemd unit file. Make sure to limit the memory usage to less than your system's total memory to prevent the relay from crashing the system.
-and Replace the values for `ExecStart` and `WorkingDirectory` with the actual paths where you cloned the repository and stored the `.env` file.
+Replace the values for `ExecStart` and `WorkingDirectory` with the actual paths where you installed Haven and stored the `.env` file.
 
 
 1. Create the file:
@@ -104,9 +101,9 @@ Description=Haven Relay
 After=network.target
 
 [Service]
-ExecStart=/home/ubuntu/haven/haven #Edit path to point to the path of where the haven git was pulled
-WorkingDirectory=/home/ubuntu/haven #Edit path to point to the path of where the haven git was pulled
-MemoryLimit=1000M  # Example, Limit memory usage to 1000 MB | Edit this to fit your machine
+ExecStart=/home/ubuntu/haven/haven #Edit path to point to where you installed Haven
+WorkingDirectory=/home/ubuntu/haven #Edit path to point to where you installed Haven
+MemoryMax=1000M  # Example, Limit memory usage to 1000 MB | Edit this to fit your machine
 Restart=always
 
 [Install]
@@ -132,7 +129,29 @@ sudo systemctl start haven
 sudo systemctl enable haven
 ```
 
-### 6. Serving over nginx (optional)
+### MacOS - Create a login item App
+To have the relay run on boot, create a script that will open terminal and run the haven binary, the termainal will remain open and the relay running with it. Be sure the download /haven directory is locacted in the MacOS home folder ~/
+
+1. Create the App: Open Script Editor
+
+2. Add the following contents:
+
+```ini
+tell application "Terminal"
+  activate
+  do script "cd \"$HOME/haven\"; ./haven; exec $SHELL"
+end tell
+```
+3. Save in Applications folder
+
+4. Open System Settings - General - Login Items
+   Hit the plus, add run_haven from Applications folder
+
+5. Reboot - On initial restart and terminal auto-open choose “allow”
+
+6. Reboot again to test login item
+
+### 5. Serving over nginx or apache (optional)
 
 To have a domain name (example: relay.domain.com) point to your machine, you will need to setup an nginx.
 
@@ -168,6 +187,29 @@ server {
 }
 ```
 
+Or apache configuration file:
+```apache
+<VirtualHost *:80>
+        ServerName yourdomain.com
+
+        RewriteEngine On
+        RewriteCond %{HTTP:Upgrade} websocket [NC]
+        RewriteCond %{HTTP:Connection} upgrade [NC]
+        RewriteRule ^/?(.*) "ws://localhost:3355/$1" [P,L]
+
+        # Proxy for HTTP traffic (NIP-11 relay info page)
+        ProxyPass / http://localhost:3355/
+        ProxyPassReverse / http://localhost:3355/
+
+        # Optional: Add HSTS header for enhanced security
+        Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+
+        # Optional: Set appropriate WebSocket headers
+        RequestHeader set Upgrade "websocket"
+        RequestHeader set Connection "Upgrade"
+</VirtualHost>
+```
+
 Replace `yourdomain.com` with your actual domain name.
 
 > [!NOTE]
@@ -179,6 +221,11 @@ After adding the configuration, restart nginx:
 
 ```bash
 sudo systemctl restart nginx
+```
+
+Apache:
+```bash
+sudo systemctl restart httpd
 ```
 
 ### Alternative: Serving over Caddy
@@ -256,6 +303,12 @@ After installing Certbot, run the following command to generate an SSL certifica
 sudo certbot --nginx
 ```
 
+Apache:
+
+```bash
+sudo certbot --apache
+```
+
 Follow the instructions to generate the certificate.
 
 Note: Command will fail if the Domain you added to nginx is not yet pointing at your machine's IP address. 
@@ -280,51 +333,6 @@ Once everything is set up, the relay will be running on `localhost:3355` with th
 - `localhost:3355/chat`
 - `localhost:3355/inbox`
 
-## Start the Project with Docker Compose
-
-To start the project using Docker Compose, follow these steps:
-
-1. Ensure Docker and Docker Compose are installed on your system.
-2. Navigate to the project directory.
-3. Ensure the `.env` file is present in the project directory and has the necessary environment variables set.
-4. You'll also need to expose ports 80 and 443 to the internet and set up your DNS A and AAAA (if you are using IPv6)
-   records to point to your server's IP address.
-5. (Optional) You can also change the paths of the `blossom`, `db`, and `templates` folders in the `compose.yml` file.
-
-   ```yaml
-   volumes:
-      - ./blossom:/haven/blossom # only change the left side before the colon
-      - ./db:/haven/db
-      - ./templates:/haven/templates
-   ```
-6. (Optional) Nginx is pre-configured to reject uploads larger than 100MB. If you want to change this, modify the `client_max_body_size`
-directive in the `nginx/haven_proxy.conf file`.
-
-   ```nginx
-   client_max_body_size 0;
-   ```
-
-7. Run the following command:
-
-   ```sh
-   # in foreground
-   docker compose up --build
-   # in background
-   docker compose up --build -d
-   ```
-   
-8. For updating the relay, run the following commands:
-
-   ```sh
-   git pull
-   docker compose down
-   docker compose build
-   # in foreground
-   docker compose up
-   # in background
-   docker compose up -d
-   ```
-
 ## Database
 
 Haven currently supports [BadgerDB](https://github.com/dgraph-io/badger) and [LMDB](https://www.symas.com/mdb) as embedded
@@ -348,9 +356,23 @@ defines an upper limit for the database size. For more information about LMDB’
 
 ### Migrating from databases created in older versions of Haven
 
-Haven versions 1.0.3 and earlier did not replace outdated notes. While this does not impact the relay's core 
-functionality, it can lead to a bloated database, reduced performance, and bugs in certain clients. For this reason, it
-is recommended to delete old databases and start fresh, optionally [re-importing](#8-run-the-import-optional) previous notes.
+Haven uses [Khatru's event store](https://github.com/fiatjaf/eventstore) to store notes. The way events are stored evolves 
+over time, and occasionally this introduces breaking changes.
+
+As a precaution, before upgrading to a newer version of Haven, you should back up the `db` folder.
+
+Haven versions 1.0.3 and earlier did not replace outdated notes. While this does not affect the relay's core
+functionality, it can result in a bloated database, reduced performance, and bugs in some clients. For this reason, it
+is recommended to delete old databases and start fresh.
+
+BadgerDB users upgrading from Haven version 1.0.5 or earlier may encounter a critical error when starting the relay:
+
+```
+error running migrations: failed to delete index key xxxx: Txn is too big to fit into one request
+```
+
+As a workaround, you can delete the `db` folder and start fresh, optionally [re-importing](#8-run-the-import-optional)
+previous notes.
 
 ## Blossom Media Server
 

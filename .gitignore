@@ -7,6 +7,7 @@ haven
 .idea/
 db.zip
 db/
+dist/
 blossom/
 *.log
 db_backup_*/
