@@ -12,10 +12,12 @@ import (
 	"github.com/fiatjaf/khatru"
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/spf13/afero"
+
+	"github.com/bitvora/haven/wot"
 )
 
 var (
-	pool   = nostr.NewSimplePool(context.Background(), nostr.WithPenaltyBox())
+	pool   *nostr.SimplePool
 	config = loadConfig()
 	fs     afero.Fs
 )
@@ -35,21 +37,36 @@ func main() {
 		log.Fatal("🚫 error creating blossom path:", err)
 	}
 
-	initRelays()
+	mainCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	pool = nostr.NewSimplePool(mainCtx, nostr.WithPenaltyBox())
+
+	ensureImportRelays()
+
+	wotModel := wot.NewSimpleInMemory(
+		pool,
+		config.OwnerNpubKey,
+		config.ImportSeedRelays,
+		config.WotFetchTimeoutSeconds,
+		config.ChatRelayMinimumFollowers,
+	)
+	wot.Initialize(mainCtx, wotModel)
+
+	initRelays(mainCtx)
+
+	if *importFlag {
+		log.Println("📦 importing notes")
+		importOwnerNotes(mainCtx)
+		importTaggedNotes(mainCtx)
+		log.Println("🔌 HAVEN is shutting down")
+		return
+	}
 
 	go func() {
-		ensureImportRelays()
-		refreshTrustNetwork()
-
-		if *importFlag {
-			log.Println("📦 importing notes")
-			importOwnerNotes()
-			importTaggedNotes()
-			return
-		}
-
-		go subscribeInboxAndChat()
-		go backupDatabase()
+		go subscribeInboxAndChat(mainCtx)
+		go backupDatabase(mainCtx)
+		go wot.PeriodicRefresh(mainCtx, config.WotRefreshInterval)
 	}()
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("templates/static"))))
@@ -67,15 +84,16 @@ func dynamicRelayHandler(w http.ResponseWriter, r *http.Request) {
 	var relay *khatru.Relay
 	relayType := r.URL.Path
 
-	if relayType == "" {
-		relay = outboxRelay
-	} else if relayType == "/private" {
+	switch relayType {
+	case "/private":
 		relay = privateRelay
-	} else if relayType == "/chat" {
+	case "/chat":
 		relay = chatRelay
-	} else if relayType == "/inbox" {
+	case "/inbox":
 		relay = inboxRelay
-	} else {
+	case "":
+		relay = outboxRelay
+	default:
 		relay = outboxRelay
 	}
 
