@@ -51,8 +51,6 @@ type Config struct {
 	ChatRelayNpub                        string        `json:"chat_relay_npub"`
 	ChatRelayDescription                 string        `json:"chat_relay_description"`
 	ChatRelayIcon                        string        `json:"chat_relay_icon"`
-	ChatRelayWotDepth                    int           `json:"chat_relay_wot_depth"`
-	ChatRelayMinimumFollowers            int           `json:"chat_relay_minimum_followers"`
 	OutboxRelayName                      string        `json:"outbox_relay_name"`
 	OutboxRelayNpub                      string        `json:"outbox_relay_npub"`
 	OutboxRelayDescription               string        `json:"outbox_relay_description"`
@@ -69,6 +67,8 @@ type Config struct {
 	ImportSeedRelays                     []string      `json:"import_seed_relays"`
 	BackupProvider                       string        `json:"backup_provider"`
 	BackupIntervalHours                  int           `json:"backup_interval_hours"`
+	WotDepth                             int           `json:"wot_depth"`
+	WotMinimumFollowers                  int           `json:"wot_minimum_followers"`
 	WotFetchTimeoutSeconds               int           `json:"wot_fetch_timeout_seconds"`
 	WotRefreshInterval                   time.Duration `json:"wot_refresh_interval"`
 	LogLevel                             string        `json:"log_level"`
@@ -100,8 +100,6 @@ func loadConfig() Config {
 		ChatRelayNpub:                        getEnv("CHAT_RELAY_NPUB"),
 		ChatRelayDescription:                 getEnv("CHAT_RELAY_DESCRIPTION"),
 		ChatRelayIcon:                        getEnv("CHAT_RELAY_ICON"),
-		ChatRelayWotDepth:                    getEnvInt("CHAT_RELAY_WOT_DEPTH", 0),
-		ChatRelayMinimumFollowers:            getEnvInt("CHAT_RELAY_MINIMUM_FOLLOWERS", 0),
 		OutboxRelayName:                      getEnv("OUTBOX_RELAY_NAME"),
 		OutboxRelayNpub:                      getEnv("OUTBOX_RELAY_NPUB"),
 		OutboxRelayDescription:               getEnv("OUTBOX_RELAY_DESCRIPTION"),
@@ -116,8 +114,10 @@ func loadConfig() Config {
 		ImportTaggedNotesFetchTimeoutSeconds: getEnvInt("IMPORT_TAGGED_NOTES_FETCH_TIMEOUT_SECONDS", 120),
 		ImportQueryIntervalSeconds:           getEnvInt("IMPORT_QUERY_INTERVAL_SECONDS", 360000),
 		ImportSeedRelays:                     getRelayListFromFile(getEnv("IMPORT_SEED_RELAYS_FILE")),
-		BackupProvider:                       getEnv("BACKUP_PROVIDER"),
+		BackupProvider:                       getEnvString("BACKUP_PROVIDER", "none"),
 		BackupIntervalHours:                  getEnvInt("BACKUP_INTERVAL_HOURS", 24),
+		WotDepth:                             getEnvInt("WOT_DEPTH", 3),
+		WotMinimumFollowers:                  getEnvInt("WOT_MINIMUM_FOLLOWERS", 0),
 		WotFetchTimeoutSeconds:               getEnvInt("WOT_FETCH_TIMEOUT_SECONDS", 30),
 		WotRefreshInterval:                   getEnvDuration("WOT_REFRESH_INTERVAL", 24*time.Hour),
 		LogLevel:                             getEnvString("HAVEN_LOG_LEVEL", "INFO"),
@@ -137,7 +137,7 @@ func getVersion() string {
 }
 
 func getAwsConfig() *AwsConfig {
-	backupProvider := getEnv("BACKUP_PROVIDER")
+	backupProvider := getEnvString("BACKUP_PROVIDER", "none")
 
 	if backupProvider == "aws" {
 		return &AwsConfig{
@@ -152,7 +152,7 @@ func getAwsConfig() *AwsConfig {
 }
 
 func getS3Config() *S3Config {
-	backupProvider := getEnv("BACKUP_PROVIDER")
+	backupProvider := getEnvString("BACKUP_PROVIDER", "none")
 
 	if backupProvider == "s3" {
 		return &S3Config{
@@ -168,7 +168,7 @@ func getS3Config() *S3Config {
 }
 
 func getGcpConfig() *GcpConfig {
-	backupProvider := getEnv("BACKUP_PROVIDER")
+	backupProvider := getEnvString("BACKUP_PROVIDER", "none")
 
 	if backupProvider == "gcp" {
 		return &GcpConfig{
