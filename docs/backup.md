@@ -1,8 +1,29 @@
 # Backup and Restore
 
-## Manual Backup and Restore
+### Corrected version
 
-If you want to backup all relay data to a JSONL zip file, run the following command:
+Haven provides tools for backing up and restoring your relay data. This is essential for several use cases:
+
+* **Disaster Recovery**: Protect your data against hardware failure or accidental deletion.
+* **Switching Databases**: Move your data when migrating to a new server or database provider. Move your notes from 
+  LMDB to BadgerDB or vice versa.
+* **Importing/Exporting Data**: Move data between Haven and other Nostr relays.
+
+> [!IMPORTANT]
+> When importing data from external JSONL files, Haven will trust all events contained within the file and will not try
+> to validate or split the data. For example, it will allow notes from other people to be imported into your Outbox 
+> relay, bypassing [WoT](wot.md) checks and other safeguards. This is intentional to allow for maximum flexibility when 
+> importing data, but it also means that you should be careful when importing data from untrusted sources.
+
+> [!TIP]
+> For simple imports from external relays, you may prefer to use the
+> [`./haven import`](../README.md#8-import-your-old-notes-optional) command instead.
+
+---
+
+## Manual Backup
+
+If you want to back up all relay data to a JSONL zip file, run the following command:
 
 ```bash
 ./haven backup
@@ -14,22 +35,66 @@ This will create a `haven_backup.zip` file in your current directory. You can sp
 ./haven backup mybackup.zip
 ```
 
-To backup a specific relay to a JSONL file:
+If you want to upload the backup to your cloud provider after creation, use the `--to-cloud` flag:
+
+```bash
+./haven backup --to-cloud
+```
+
+You can also specify a filename with `--to-cloud`:
+
+```bash
+./haven backup --to-cloud mybackup.zip
+```
+
+To back up a specific relay to a JSONL file:
 
 ```bash
 ./haven backup --relay outbox outbox.jsonl
 ```
 
+And you can also upload a specific relay backup to the cloud:
+
+```bash
+./haven backup --relay outbox --to-cloud outbox.jsonl
+```
+
+## Manual Restore
+
 To restore data from a `haven_backup.zip` file, run:
 
 ```bash
-./haven restore haven_backup.zip
+./haven restore
+```
+
+This will look for a `haven_backup.zip` file in your current directory. You can specify a different filename:
+
+```bash
+./haven restore mybackup.zip
+```
+
+To restore from the cloud using the default name:
+
+```bash
+./haven restore --from-cloud
+```
+
+You can also specify a filename to restore from the cloud:
+
+```bash
+./haven restore --from-cloud mybackup.zip
 ```
 
 To restore a specific relay from a JSONL file:
 
 ```bash
 ./haven restore --relay outbox outbox.jsonl
+```
+
+And to restore a specific relay from a JSONL file in the cloud:
+
+```bash
+./haven restore --relay outbox --from-cloud outbox.jsonl
 ```
 
 ## Periodic Cloud Backups
@@ -41,7 +106,7 @@ To back up your database to S3 compatible storage such as [AWS S3](https://aws.a
 [DigitalOcean Spaces](https://www.digitalocean.com/products/spaces) or
 [Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/).
 
-First you need to create the bucket on your provider. After creating the Bucket you will be provided with:
+First, you need to create the bucket on your provider. After creating the Bucket, you will be provided with:
 
 - Access Key ID
 - Secret Key
@@ -78,4 +143,4 @@ See [Cloud Storage Provider Specific Instructions](cloud-storage.md) for more de
 
 ---
 
-[README](../README.md)
+[README](../README.md) | [Cloud Storage](cloud-storage.md) 

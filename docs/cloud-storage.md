@@ -1,6 +1,7 @@
 # Cloud Storage Provider Specific Instructions
 
-This page contains specific configuration examples for various cloud storage providers. For general instructions on how to set up periodic cloud backups, see the [Backup and Restore Documentation](backup.md#periodic-cloud-backups).
+This page contains specific configuration examples for various cloud storage providers. For general instructions on how 
+to set up periodic cloud backups, see the [Backup and Restore Documentation](backup.md#periodic-cloud-backups).
 
 ## Provider Specific Instructions
 
@@ -60,12 +61,11 @@ S3_REGION=""
 S3_BUCKET_NAME="haven_backup"
 ```
 
-### Deprecation warning
-
-The old `aws` and `gcp` backup providers have been deprecated in favor of the new `s3` provider. If you are using the
-old providers, please update your `.env` file to use the new `s3` provider. The old providers will be removed in a future
-release.
+> [!WARNING]
+> The old `aws` and `gcp` backup providers have long been deprecated in favour of the new `s3` provider and were fully 
+> removed in *v1.2.0*. If you are still using the old providers, please update your `.env` file to use the new `s3` 
+> provider.
 
 ---
 
-[Backup and Restore](backup.md) | [README](../README.md)
+[README](../README.md) | [Backup and Restore](backup.md)
