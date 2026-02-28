@@ -47,6 +47,8 @@ Each relay has its own separate database instance (5 total: private, chat, outbo
 - **limits.go** — Per-relay rate limiting config (event IP, connection rate, filter complexity)
 - **pkg/wot/** — Web of Trust: levels 0-3, in-memory pubkey graph with atomic refresh
 - **internal/cloud/** — S3-compatible cloud provider abstraction (upload/download interfaces)
+- **ddns.go** — Periodic DDNS updater: detects public IP changes and updates DNS via provider API
+- **internal/ddns/** — DDNS provider interface + implementations (Cloudflare, DuckDNS, No-IP)
 
 ### Database
 
@@ -65,6 +67,10 @@ Configured via `WOT_DEPTH` (0=disabled, 1=owner-only, 2=direct follows, 3=follow
 - **Whitelist** (`whitelisted_npubs.json`) — Full access to all relays + Blossom uploads. Owner npub always included.
 - **Blacklist** (`blacklisted_npubs.json`) — Completely blocked from all relays.
 - Both loaded at startup from JSON files specified in `.env`.
+
+### DDNS
+
+Built-in dynamic DNS updater for home connections with changing IPs. Runs as a background goroutine alongside WoT refresh and cloud backups. Detects public IP via external services (ipify, icanhazip, ifconfig.me), caches last known IP, and only calls the provider API when the IP changes. Configured via `DDNS_*` env vars in `.env`. Providers: Cloudflare (API token + zone/record IDs), DuckDNS (token), No-IP (username/password). Set `DDNS_PROVIDER="none"` to disable.
 
 ## Configuration
 

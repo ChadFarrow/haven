@@ -67,6 +67,14 @@ type Config struct {
 	BlastrRelays                         []string            `json:"blastr_relays"`
 	BlastrTimeoutSeconds                 int                 `json:"blastr_timeout_seconds"`
 	S3Config                             *S3Config           `json:"s3_config"`
+	DDNSProvider                         string              `json:"ddns_provider"`
+	DDNSCheckInterval                    time.Duration       `json:"ddns_check_interval"`
+	DDNSDomain                           string              `json:"ddns_domain"`
+	DDNSToken                            string              `json:"ddns_token"`
+	DDNSUsername                         string              `json:"ddns_username"`
+	DDNSPassword                         string              `json:"ddns_password"`
+	DDNSCloudflareZoneID                 string              `json:"ddns_cloudflare_zone_id"`
+	DDNSCloudflareRecordID               string              `json:"ddns_cloudflare_record_id"`
 }
 
 const relaySoftware = "https://github.com/bitvora/haven"
@@ -119,6 +127,14 @@ func loadConfig() Config {
 		BlastrRelays:                         getRelayListFromFile(getEnv("BLASTR_RELAYS_FILE")),
 		BlastrTimeoutSeconds:                 getEnvInt("BLASTR_TIMEOUT_SECONDS", 5),
 		S3Config:                             getS3Config(),
+		DDNSProvider:                         getEnvString("DDNS_PROVIDER", "none"),
+		DDNSCheckInterval:                    getEnvDuration("DDNS_CHECK_INTERVAL", 5*time.Minute),
+		DDNSDomain:                           getEnvString("DDNS_DOMAIN", ""),
+		DDNSToken:                            getEnvString("DDNS_TOKEN", ""),
+		DDNSUsername:                          getEnvString("DDNS_USERNAME", ""),
+		DDNSPassword:                          getEnvString("DDNS_PASSWORD", ""),
+		DDNSCloudflareZoneID:                 getEnvString("DDNS_CLOUDFLARE_ZONE_ID", ""),
+		DDNSCloudflareRecordID:               getEnvString("DDNS_CLOUDFLARE_RECORD_ID", ""),
 	}
 
 	// Relay owner is always whitelisted
