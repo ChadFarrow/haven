@@ -22,6 +22,24 @@ type S3Config struct {
 	Region      string `json:"region"`
 }
 
+type DDNSConfig struct {
+	Provider       string        `json:"provider"`
+	Domain         string        `json:"domain"`
+	UpdateInterval time.Duration `json:"update_interval"`
+
+	// DuckDNS
+	DuckDNSToken string `json:"duckdns_token"`
+
+	// Cloudflare
+	CloudflareAPIToken string `json:"cloudflare_api_token"`
+	CloudflareZoneID   string `json:"cloudflare_zone_id"`
+	CloudflareRecordID string `json:"cloudflare_record_id"`
+
+	// No-IP / DynDNS2
+	NoIPUsername string `json:"noip_username"`
+	NoIPPassword string `json:"noip_password"`
+}
+
 type Config struct {
 	OwnerNpub                            string              `json:"owner_npub"`
 	OwnerPubKey                          string              `json:"owner_pubkey"`
@@ -67,6 +85,7 @@ type Config struct {
 	BlastrRelays                         []string            `json:"blastr_relays"`
 	BlastrTimeoutSeconds                 int                 `json:"blastr_timeout_seconds"`
 	S3Config                             *S3Config           `json:"s3_config"`
+	DDNS                                 *DDNSConfig         `json:"ddns"`
 }
 
 const relaySoftware = "https://github.com/bitvora/haven"
@@ -119,6 +138,7 @@ func loadConfig() Config {
 		BlastrRelays:                         getRelayListFromFile(getEnv("BLASTR_RELAYS_FILE")),
 		BlastrTimeoutSeconds:                 getEnvInt("BLASTR_TIMEOUT_SECONDS", 5),
 		S3Config:                             getS3Config(),
+		DDNS:                                 getDDNSConfig(),
 	}
 
 	// Relay owner is always whitelisted
@@ -150,6 +170,35 @@ func getS3Config() *S3Config {
 	}
 
 	return nil
+}
+
+func getDDNSConfig() *DDNSConfig {
+	provider := getEnvString("DDNS_PROVIDER", "none")
+	if provider == "none" || provider == "" {
+		return nil
+	}
+
+	cfg := &DDNSConfig{
+		Provider:       provider,
+		Domain:         getEnv("DDNS_DOMAIN"),
+		UpdateInterval: getEnvDuration("DDNS_UPDATE_INTERVAL", 5*time.Minute),
+	}
+
+	switch provider {
+	case "duckdns":
+		cfg.DuckDNSToken = getEnv("DDNS_DUCKDNS_TOKEN")
+	case "cloudflare":
+		cfg.CloudflareAPIToken = getEnv("DDNS_CLOUDFLARE_API_TOKEN")
+		cfg.CloudflareZoneID = getEnv("DDNS_CLOUDFLARE_ZONE_ID")
+		cfg.CloudflareRecordID = getEnv("DDNS_CLOUDFLARE_RECORD_ID")
+	case "noip":
+		cfg.NoIPUsername = getEnv("DDNS_NOIP_USERNAME")
+		cfg.NoIPPassword = getEnv("DDNS_NOIP_PASSWORD")
+	default:
+		log.Fatalf("Unknown DDNS provider: %s (supported: duckdns, cloudflare, noip)", provider)
+	}
+
+	return cfg
 }
 
 func getRelayListFromFile(filePath string) []string {

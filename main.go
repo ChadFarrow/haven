@@ -92,6 +92,7 @@ func main() {
 		go subscribeInboxAndChat(mainCtx)
 		go startPeriodicCloudBackups(mainCtx)
 		go wot.PeriodicRefresh(mainCtx, config.WotRefreshInterval)
+		go startDynamicDNS(mainCtx, config.DDNS)
 	}()
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("templates/static"))))
