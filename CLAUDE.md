@@ -79,6 +79,10 @@ All config via `.env` file (loaded by godotenv). See `.env.example` for full ref
 - `relays_blastr.json` — Target relays for publishing outbox events
 - `whitelisted_npubs.json` / `blacklisted_npubs.json` — Access control
 
+## Utilities
+
+- **republish_npubs.sh** — Fetches profiles (kind 0), notes (kind 1), contact lists (kind 3), and relay lists (kind 10002) for whitelisted npubs from source relays and republishes them to all blastr relays. Uses `nak` CLI (`~/.local/bin/nak`). Run to improve discoverability of whitelisted npubs across the relay network.
+
 ## Fork Management
 
 This is a fork of `bitvora/haven`. Upstream is tracked as the `upstream` remote:
