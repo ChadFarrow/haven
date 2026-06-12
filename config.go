@@ -77,7 +77,7 @@ type Config struct {
 	DDNSCloudflareRecordID               string              `json:"ddns_cloudflare_record_id"`
 }
 
-const relaySoftware = "https://github.com/bitvora/haven"
+const relaySoftware = "https://github.com/barrydeen/haven"
 
 func loadConfig() Config {
 	_ = godotenv.Load(".env")
