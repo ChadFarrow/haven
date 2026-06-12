@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/bitvora/haven/internal/ddns"
+	"github.com/barrydeen/haven/internal/ddns"
 )
 
 func startPeriodicDDNS(ctx context.Context) {
