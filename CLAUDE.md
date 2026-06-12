@@ -85,9 +85,12 @@ All config via `.env` file (loaded by godotenv). See `.env.example` for full ref
 
 ## Fork Management
 
-This is a fork of `bitvora/haven`. Upstream is tracked as the `upstream` remote:
+This is a fork of Haven. The maintained upstream is now `barrydeen/haven` — the original
+`bitvora/haven` is feature-complete and frozen, with future bug fixes going to barrydeen.
+The `upstream` remote points to `barrydeen/haven`:
 ```bash
 git fetch upstream
 git merge upstream/master
 ```
+Note: as of v1.2.2 the Go module path is `github.com/barrydeen/haven` (renamed from `bitvora`).
 Upstream CI workflow files are excluded (GitHub token lacks `workflow` scope).
