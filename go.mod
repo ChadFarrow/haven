@@ -76,3 +76,7 @@ require (
 	golang.org/x/text v0.34.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
+
+// Local patch: drop the bogus 24-zero-byte "PalmPilot Database" signature that
+// caused MP3s without an ID3v2 tag to be typed chemical/x-pdb. See third_party/README.md
+replace github.com/liamg/magic => ./third_party/magic
