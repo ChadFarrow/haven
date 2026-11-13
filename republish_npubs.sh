@@ -4,6 +4,7 @@
 NPUBS=(
   "npub10z4f5xu9g4rjjvqx4zhhn9hnrqddpczlchq4w3v0wn6430u838hqdlx7l3"
   "npub177fz5zkm87jdmf0we2nz7mm7uc2e7l64uzqrv6rvdrsg8qkrg7yqx0aaq7"
+  "npub1tjmdpxuwjp4p3p6jjete9lkx6tnu9ytgtjhagsk8df372kdz2trqtdjv95"
 )
 
 # Build relay list from relays_blastr.json
