@@ -10,6 +10,10 @@ db/
 db_backup_*/
 dist/
 haven
+management.json
+management.json.tmp
+metrics.json
+metrics.json.tmp
 relays_blastr.json
 relays_import.json
 whitelisted_npubs.json

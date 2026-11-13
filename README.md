@@ -42,8 +42,15 @@ relay, but anyone can view the images and videos.
 **Web of Trust**: Protected from DM and Inbox spam by using a Web of Trust (WoT). See the [Web of Trust 
 Documentation](docs/wot.md) for more details.
 
-**Access Control**: Whitelist and blacklist npubs. See the [Access Control Documentation](docs/access-control.md) 
-for more details.
+**Access Control**: Whitelist and blacklist npubs, ban them from a nostr list you publish, and delete any event from 
+your relay. See the [Access Control Documentation](docs/access-control.md) for more details.
+
+**Relay Management**: Run the relay from a web page signed in with a nostr browser extension, or over the
+NIP-86 API: ban pubkeys, drop events, block addresses and rename each relay. The same page also **browses the notes
+each relay is storing** — filter, search, inspect and delete them — and graphs the relay on a **dashboard**: traffic,
+connections, accepted against rejected, the kind mix, top authors and storage, with 24-hour, 7-day and 30-day
+history that survives a restart. See the [Relay Management Documentation](docs/relay-management.md) for more
+details.
 
 **Inbox Relay**: Notes are pulled from other relays and stored in the inbox relay.
 
@@ -88,8 +95,10 @@ Check out some of the external community-built tools for managing Haven relays:
    your Haven relay with a native GUI and a ton of extra features
 3. [**Haven Start9 Wrapper**](https://github.com/higedamc/haven-start9-wrapper): A Tor-only Start9 wrapper for Haven 
    with its own Dashboard and Web UI
-4. [**HAVEN Kit**](https://github.com/Letdown2491/haven-kit): Simple configuration tool to set up a HAVEN Nostr 
-   relay in Umbrel Docker or Podman with just a few clicks 
+4. [**HAVEN Kit**](https://github.com/Letdown2491/haven-kit): Set up a HAVEN Nostr relay with just a few clicks 
+   and no manual `.env` editing. Includes a web-based configuration UI for Docker, Podman, and 
+   [Umbrel](https://github.com/Letdown2491/haven-kit-umbrel) installs (via community app store), while the 
+   [StartOS](https://github.com/Letdown2491/haven-kit-startos) package is configured natively through StartOS Actions.
 
 If you have built a Haven relay management tool that you would like to share, please open a PR to add it to this list!
 
@@ -260,7 +269,7 @@ server {
         proxy_pass http://localhost:3355;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -268,6 +277,12 @@ server {
     }
 }
 ```
+
+> [!IMPORTANT]
+> `X-Forwarded-For` is set to `$remote_addr`, not the more common `$proxy_add_x_forwarded_for`. The latter *appends*
+> the real client address to whatever the client sent, which lets a client prepend a forged one — Haven reads the
+> leftmost entry, so the forgery would win. This matters for the rate limiters and for
+> [IP blocking](docs/relay-management.md#blocking-addresses).
 
 Replace `yourdomain.com` with your actual domain name.
 
@@ -306,6 +321,10 @@ sudo systemctl restart nginx
            ProxyPass / http://localhost:3355/
            ProxyPassReverse / http://localhost:3355/
    
+           # Overwrite whatever the client sent, so a forged X-Forwarded-For
+           # cannot win: mod_proxy appends to the header rather than replacing it
+           RequestHeader set X-Forwarded-For "expr=%{REMOTE_ADDR}"
+
            # Optional: Add HSTS header for enhanced security
            Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
    
@@ -429,6 +448,9 @@ Once everything is set up, the relay will be running on `localhost:3355` with th
 - `localhost:3355/private`
 - `localhost:3355/chat`
 - `localhost:3355/inbox`
+- `localhost:3355/admin` (relay management, notes browser and dashboard, signed in with a nostr browser extension)
+
+See [Relay Management](docs/relay-management.md) for the admin page and the NIP-86 API behind it.
 
 ## Database
 
@@ -479,6 +501,20 @@ but anyone can view the hosted images and videos.
 
 Media files are stored in the file system based on the `BLOSSOM_PATH` environment variable set in the `.env` file. 
 The default path is `./blossom`.
+
+> [!IMPORTANT]
+> Give `BLOSSOM_PATH` a trailing slash, as `.env.example` does. The path is joined to the file name by
+> concatenation, so `BLOSSOM_PATH="blossom"` writes media *beside* the `blossom` directory rather than inside it,
+> as `./blossom<hash>`. Haven warns at startup when it sees this. It is not corrected automatically, because doing
+> so would hide every file already written that way.
+
+Browse and manage what has been uploaded from the **Media** view of the [admin page](docs/relay-management.md#media):
+filter, search and sort the whole library, delete media, block a hash so the same bytes cannot be uploaded again,
+and reconcile the index against what is actually on disk.
+
+> [!WARNING]
+> Cloud backups cover the media **index**, not the media **files**. Back up your `BLOSSOM_PATH` directory
+> separately. Restoring a backup without it leaves every entry pointing at a file that is no longer there.
 
 ## Cloud Backups
 
