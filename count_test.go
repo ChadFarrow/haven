@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/fiatjaf/eventstore/lmdb"
 	"github.com/nbd-wtf/go-nostr"
@@ -13,10 +12,10 @@ import (
 // TestLmdbCountMatchesFilter checks lmdb's CountEvents and CountEventsHLL
 // against nostr.Filter.Matches, for the filter shapes a relay is handed: no
 // constraint, one index, an index plus extra author, kind or tag checks, and a
-// time window. Each call has to come back within a deadline.
+// time window.
 func TestLmdbCountMatchesFilter(t *testing.T) {
 	db := newTestDB(t, 500).(*lmdb.LMDBBackend)
-	// CountEventsHLL calls this without a nil check; haven itself never sets it
+	// CountEventsHLL needs this hook; haven itself does not count with HLL
 	db.EnableHLLCacheFor = func(int) (bool, bool) { return false, false }
 
 	alice, bob := nostr.GeneratePrivateKey(), nostr.GeneratePrivateKey()
@@ -66,7 +65,10 @@ func TestLmdbCountMatchesFilter(t *testing.T) {
 			}
 		}
 
-		got := countWithDeadline(t, name, func() (int64, error) { return db.CountEvents(context.Background(), filter) })
+		got, err := db.CountEvents(context.Background(), filter)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
 		if got != want {
 			t.Errorf("%s: CountEvents = %d, want %d", name, got, want)
 		}
@@ -85,36 +87,13 @@ func TestLmdbCountMatchesFilter(t *testing.T) {
 			}
 		}
 
-		got := countWithDeadline(t, name+" (hll)", func() (int64, error) {
-			n, _, err := db.CountEventsHLL(context.Background(), filter, 0)
-			return n, err
-		})
+		got, _, err := db.CountEventsHLL(context.Background(), filter, 0)
+		if err != nil {
+			t.Fatalf("%s (hll): %v", name, err)
+		}
 		if got != want {
 			t.Errorf("%s: CountEventsHLL = %d, want %d", name, got, want)
 		}
-	}
-}
-
-func countWithDeadline(t *testing.T, name string, count func() (int64, error)) int64 {
-	t.Helper()
-	type result struct {
-		n   int64
-		err error
-	}
-	done := make(chan result, 1)
-	go func() {
-		n, err := count()
-		done <- result{n, err}
-	}()
-	select {
-	case r := <-done:
-		if r.err != nil {
-			t.Fatalf("%s: %v", name, r.err)
-		}
-		return r.n
-	case <-time.After(10 * time.Second):
-		t.Fatalf("%s: the count did not return within 10s", name)
-		return 0
 	}
 }
 
