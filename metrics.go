@@ -267,10 +267,11 @@ func instrument(relay *khatru.Relay, name string) {
 		return false, ""
 	})
 
-	// COUNT has its own reject slice and haven registers nothing on it, so this is
-	// the only visibility there is into NIP-45 traffic. Appending a hook that never
-	// rejects to an empty slice changes nothing about who is allowed to count.
-	relay.RejectCountFilter = append(relay.RejectCountFilter, func(context.Context, nostr.Filter) (bool, string) {
+	// COUNT has its own reject slice, and this is the only visibility there is
+	// into NIP-45 traffic. Prepended, so it counts every COUNT filter offered,
+	// including the ones the private and chat relays' access rules then refuse.
+	// A hook that never rejects changes nothing about who is allowed to count.
+	relay.RejectCountFilter = prepend(relay.RejectCountFilter, func(context.Context, nostr.Filter) (bool, string) {
 		m.c.add(countFilters, 1)
 		return false, ""
 	})
