@@ -206,6 +206,10 @@ func queryPageSize(db DBBackend) int {
 // That matters here because DB_ENGINE defaults to lmdb and CountEvents(Filter{})
 // is what the stats method is built on. countStoredEvents walks instead when
 // this is false.
+//
+// eventstore v0.17.15 fixes lmdb's CountEvents. The walk is kept for now: it is
+// correct on both engines, and moving the stats method back to CountEvents is a
+// change of its own.
 func backendCountsSafely(db DBBackend) bool {
 	switch db.(type) {
 	case *badger.BadgerBackend:
