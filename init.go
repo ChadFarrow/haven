@@ -269,6 +269,9 @@ func initRelays(ctx context.Context) {
 		privateRelay.RejectFilter = append(privateRelay.RejectFilter, policies.NoComplexFilters)
 	}
 	privateRelay.RejectFilter = append(privateRelay.RejectFilter, policies.MustAuth, MustBeWhitelistedToQuery)
+	// khatru checks COUNT (plain and HLL) against RejectCountFilter, never
+	// RejectFilter, so the read access rules are applied there as well
+	privateRelay.RejectCountFilter = append(privateRelay.RejectCountFilter, policies.MustAuth, MustBeWhitelistedToQuery)
 
 	privateRelay.RejectEvent = append(privateRelay.RejectEvent,
 		MustNotBeBannedToPost,
@@ -332,6 +335,8 @@ func initRelays(ctx context.Context) {
 		chatRelay.RejectFilter = append(chatRelay.RejectFilter, policies.NoComplexFilters)
 	}
 	chatRelay.RejectFilter = append(chatRelay.RejectFilter, policies.MustAuth, MustBeInWotToQuery)
+	// see privateRelay: COUNT has its own reject slice in khatru
+	chatRelay.RejectCountFilter = append(chatRelay.RejectCountFilter, policies.MustAuth, MustBeInWotToQuery)
 
 	chatRelay.RejectEvent = append(chatRelay.RejectEvent,
 		MustNotBeBannedToPost,

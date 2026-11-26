@@ -15,7 +15,12 @@ go build                     # Build binary
 ./haven import               # Import notes from seed relays
 ```
 
-No test suite exists. No Makefile — use `go build` directly or goreleaser for cross-platform releases.
+No Makefile — use `go build` directly or goreleaser for cross-platform releases. `go.mod` needs Go 1.25 or
+later (`toolchain go1.25.14`).
+
+Tests: `go test ./...`. In this fork the package-level `config = loadConfig()` runs before
+`a_testenv_test.go` seeds the environment, so the test binary exits with "OWNER_NPUB not set" unless the
+variables from `seedTestEnv` are exported first (upstream moved `loadConfig` into `main` for this).
 
 ## Architecture
 
